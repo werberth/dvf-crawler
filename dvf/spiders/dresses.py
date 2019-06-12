@@ -22,6 +22,13 @@ class DressesSpider(scrapy.Spider):
                 callback=self.parse_data
             )
 
+        next_page = response.xpath("//div[contains(@class, 'infinite-scroll-placeholder')]/@data-grid-url").get()
+        if next_page:
+            yield scrapy.Request(
+                url=next_page,
+                callback=self.parse_dresses
+            )
+
     def parse_data(self, response):
         url = response.url
         title = response.xpath("//h1[contains(@class, 'product-overview-title')]/text()").get()
