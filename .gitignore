@@ -1,0 +1,13 @@
+*.pyc
+*.pyo
+*.py[cod]
+*$py.class
+
+# Scrapy stuff:
+.scrapy
+
+.env
+.venv
+env/
+venv/
+ENV/
