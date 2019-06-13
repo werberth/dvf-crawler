@@ -34,14 +34,19 @@ class DressesSpider(scrapy.Spider):
             "//div[contains(@class, 'infinite-scroll-placeholder')]"
             "/@data-grid-url"
         )
+        next_page = next_page.get()
 
-        if next_page.get():
+        if next_page:
             yield scrapy.Request(
                 url=next_page,
                 callback=self.parse_dresses
             )
 
     def parse_dress(self, response):
+        """
+            Get informations about one dress.
+        """
+
         loader = ItemLoader(DressItem(), response=response)
         loader.add_value("url", response.url)
         loader.add_xpath(
@@ -69,7 +74,7 @@ class DressesSpider(scrapy.Spider):
             "//div[contains(@class, 'selectableSize')]/"
             "a[contains(@class, 'size-link')]/div/text()"
         )
-        sizes = size.getall()
+        sizes = sizes.getall()
 
         for size in sizes:
             self.parse_variants(item, size, response)
@@ -80,6 +85,10 @@ class DressesSpider(scrapy.Spider):
         yield item
 
     def parse_variants(self, item, size, response):
+        """
+            Get informations about one size.
+        """
+
         loader = TakeFirstItemLoader(SizeItem(), response=response)
         loader.add_xpath(
             "price",
