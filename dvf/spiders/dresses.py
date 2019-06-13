@@ -103,7 +103,7 @@ class DressesSpider(scrapy.Spider):
         loader.add_xpath(
             "stock",
             "boolean(//div[contains(@class,'selectable selectableSizeParent available')]"
-            f"[@data-attrsize='{size}'])"
+            "[@data-attrsize='{}'])".format(size)
         )
 
         variant = loader.load_item()
