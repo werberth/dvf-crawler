@@ -5,7 +5,7 @@ from scrapy.loader.processors import MapCompose, TakeFirst
 
 
 def filter_price(value):
-    for character in "$,.":
+    for character in "€$,.":
         value = value.replace(character, '')
     return int(value.strip())
 
