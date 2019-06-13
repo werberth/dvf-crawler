@@ -1,14 +1,26 @@
-# -*- coding: utf-8 -*-
-
-# Define here the models for your scraped items
-#
-# See documentation in:
-# https://doc.scrapy.org/en/latest/topics/items.html
-
+import re
 import scrapy
 
+from scrapy.loader import ItemLoader
+from scrapy.loader.processors import MapCompose, TakeFirst
 
-class DvfItem(scrapy.Item):
-    # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+
+class TakeFirstItemLoader(ItemLoader):
+    default_output_processor = TakeFirst()
+
+
+class DressItem(scrapy.Item):
+    url = scrapy.Field(output_processor=TakeFirst())
+    brandId = scrapy.Field(output_processor=TakeFirst())
+    name = scrapy.Field(output_processor=TakeFirst())
+    description = scrapy.Field(output_processor=TakeFirst())
+    images = scrapy.Field()
+    color = scrapy.Field(output_processor=TakeFirst())
+    variants = scrapy.Field()
+
+
+class SizeItem(scrapy.Item):
+    size = scrapy.Field(default=None)
+    color = scrapy.Field()
+    price = scrapy.Field()
+    stock = scrapy.Field()
