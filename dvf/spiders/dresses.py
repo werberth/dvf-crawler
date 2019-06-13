@@ -8,7 +8,7 @@ from dvf.items import DressItem, SizeItem, TakeFirstItemLoader
 
 class DressesSpider(scrapy.Spider):
     name = 'dresses'
-    allowed_domains = ['www.dvf.com', 'world.dvf.com']
+    allowed_domains = ['www.dvf.com', 'world.dvf.com', 'eu.dvf.com']
     start_urls = ['https://www.dvf.com/']
 
     def parse(self, response):
