@@ -49,6 +49,7 @@ class DressesSpider(scrapy.Spider):
 
         loader = ItemLoader(DressItem(), response=response)
         loader.add_value("url", response.url)
+        loader.add_value("brandId", "dvf")
         loader.add_xpath(
             "name",
             "//h1[contains(@class, 'product-overview-title')]/text()"
@@ -71,6 +72,7 @@ class DressesSpider(scrapy.Spider):
         item["variants"] = []
 
         sizes = response.xpath(
+            "//div[@class='pdp-size-select-wrapper']"
             "//div[contains(@class, 'selectableSize')]/"
             "a[contains(@class, 'size-link')]/div/text()"
         )
@@ -100,7 +102,8 @@ class DressesSpider(scrapy.Spider):
         )
         loader.add_xpath(
             "stock",
-            "boolean(//div[@class='unselectable selectableSizeParent available selected'])"
+            "boolean(//div[contains(@class,'selectable selectableSizeParent available')]"
+            f"[@data-attrsize='{size}'])"
         )
 
         variant = loader.load_item()

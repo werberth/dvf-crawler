@@ -1,4 +1,3 @@
-import re
 import scrapy
 
 from scrapy.loader import ItemLoader
@@ -8,7 +7,7 @@ from scrapy.loader.processors import MapCompose, TakeFirst
 def filter_price(value):
     for character in "$,.":
         value = value.replace(character, '')
-    return value.strip()
+    return int(value.strip())
 
 
 class TakeFirstItemLoader(ItemLoader):
@@ -16,6 +15,7 @@ class TakeFirstItemLoader(ItemLoader):
 
 
 class DressItem(scrapy.Item):
+    brandId = scrapy.Field()
     url = scrapy.Field(output_processor=TakeFirst())
     brandId = scrapy.Field(output_processor=TakeFirst())
     name = scrapy.Field(output_processor=TakeFirst())
@@ -31,4 +31,6 @@ class SizeItem(scrapy.Item):
     price = scrapy.Field(
         input_processor=MapCompose(filter_price)
     )
-    stock = scrapy.Field()
+    stock = scrapy.Field(
+        input_processor=MapCompose(int)
+    )
