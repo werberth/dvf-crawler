@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 import scrapy
 
+from scrapy.loader import ItemLoader
+
+from dvf.items import DressItem, SizeItem, TakeFirstItemLoader
+
 
 class DressesSpider(scrapy.Spider):
     name = 'dresses'
@@ -8,40 +12,89 @@ class DressesSpider(scrapy.Spider):
     start_urls = ['https://www.dvf.com/']
 
     def parse(self, response):
-        dresses_url = response.xpath("//ul/li[contains(@id, 'sub-menu_dresses-all')]/a/@href").get()
+        dresses_url = response.xpath(
+            "//ul/li[contains(@id, 'sub-menu_dresses-all')]/a/@href"
+        )
         yield scrapy.Request(
-            url=dresses_url,
+            url=dresses_url.get(),
             callback=self.parse_dresses
         )
-    
+
     def parse_dresses(self, response):
-        dresses = response.xpath("//div[contains(@class, 'product-image')]/a/@href").getall()
-        for url in dresses:
+        dresses = response.xpath(
+            "//div[contains(@class, 'product-image')]/a/@href"
+        )
+        for url in dresses.getall():
             yield scrapy.Request(
                 url=url,
-                callback=self.parse_data
+                callback=self.parse_dress
             )
 
-        next_page = response.xpath("//div[contains(@class, 'infinite-scroll-placeholder')]/@data-grid-url").get()
-        if next_page:
+        next_page = response.xpath(
+            "//div[contains(@class, 'infinite-scroll-placeholder')]"
+            "/@data-grid-url"
+        )
+
+        if next_page.get():
             yield scrapy.Request(
                 url=next_page,
                 callback=self.parse_dresses
             )
 
-    def parse_data(self, response):
-        url = response.url
-        title = response.xpath("//h1[contains(@class, 'product-overview-title')]/text()").get()
-        description = response.xpath("//div[contains(@class, 'product-module short-desc')]/p/text()").get()
-        images = response.xpath("//div[contains(@id, 'pdp-image-container')]/div[contains(@class, 'js-vertical-slide')]/img/@src").getall()
-        color = response.xpath("//div/span[contains(@class, 'selectedColorName')]/text()").get()
+    def parse_dress(self, response):
+        loader = ItemLoader(DressItem(), response=response)
+        loader.add_value("url", response.url)
+        loader.add_xpath(
+            "name",
+            "//h1[contains(@class, 'product-overview-title')]/text()"
+        )
+        loader.add_xpath(
+            "description",
+            "//div[contains(@class, 'product-module short-desc')]/p/text()"
+        )
+        loader.add_xpath(
+            "images",
+            "//div[contains(@id, 'pdp-image-container')]"
+            "/div[contains(@class, 'js-vertical-slide')]/img/@src"
+        )
+        loader.add_xpath(
+            "color",
+            "//div/span[contains(@class, 'selectedColorName')]/text()"
+        )
 
-        data = {
-            "brandId": "dvf",
-            'url': url,
-            'name': title,
-            'color': color,
-            'description': description,
-            "images": images,
-        }
-        yield data
+        item = loader.load_item()
+        item["variants"] = []
+
+        sizes = response.xpath(
+            "//div[contains(@class, 'selectableSize')]/"
+            "a[contains(@class, 'size-link')]/div/text()"
+        )
+        sizes = size.getall()
+
+        for size in sizes:
+            self.parse_variants(item, size, response)
+
+        if not sizes:
+            self.parse_variants(item, None, response)
+
+        yield item
+
+    def parse_variants(self, item, size, response):
+        loader = TakeFirstItemLoader(SizeItem(), response=response)
+        loader.add_xpath(
+            "price",
+            "//div[contains(@class, 'product-overview-price ')]/span/text()"
+        )
+        loader.add_xpath(
+            "color",
+            "//div/span[contains(@class, 'selectedColorName')]/text()"
+        )
+        loader.add_xpath(
+            "stock",
+            "boolean(//div[@class='unselectable selectableSizeParent available selected'])"
+        )
+
+        variant = loader.load_item()
+        variant["size"] = size
+
+        item['variants'].append(variant)
